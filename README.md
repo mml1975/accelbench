@@ -3,7 +3,7 @@
 
 
 
-Run example for C = A[N,N] x B[N,N] and sum (C). N - size = 10000:
+Run example for C = A[N,N] x B[N,N] and sum (C). N - size = 10000:\
 
 $ python accelbench.py 10000
 
