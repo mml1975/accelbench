@@ -19,7 +19,7 @@ np.random.seed(42)
 x1 = 0.2*np.random.rand(N,N) - 0.1  # Must be in [-0.1 +0.1]
 y1 = 0.2*np.random.rand(N,N) - 0.1
 
-dtypes = [(np.float16, '16',10),(np.float32, '32',6),(np.float64, '64',1)]
+dtypes = [(np.float16, '16',10),(np.float32, '32',6),(np.float64, '64',2)]
 # structure: data types, string title, repeatness for "heating" gpu
 
 
@@ -44,22 +44,23 @@ def torchcudatest(x,y,qnt,nrepeat,device):
     a = torch.from_numpy(x).to(device)
     b = torch.from_numpy(y).to(device)
     
-    #Heating
+    best_time = 1e+12
     for i in range(nrepeat):
-        c = torch.mm(a,b)
+        torch.cuda.synchronize(device = device)
+        start_t = time.perf_counter_ns()
+        c = torch.mm(a,b) # automatically on cuda
+        t = torch.sum(c)
+        torch.cuda.synchronize(device = device) # Otherwise end_t calculating before torch
+        end_t = time.perf_counter_ns()
+        dt = end_t-start_t
+        if dt < best_time:
+            best_time = dt
         del c
     
-    torch.cuda.synchronize(device = device)
-    start_t = time.perf_counter_ns()
-    c = torch.mm(a,b) # automatically on cuda
-    t = torch.sum(c)
-    torch.cuda.synchronize(device = device) # Otherwise end_t calculating before torch
-    end_t = time.perf_counter_ns()
-    
     #free memory_allocated
-    del a; del b; del c
+    del a; del b;
     torch.cuda.empty_cache()
-    return(t,end_t-start_t)
+    return(t,best_time)
     
 def torchcputest(x,y,qnt,nrepeat,device):
     # Calculate with pytorch on 'cuda' (TPU)
