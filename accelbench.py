@@ -29,13 +29,17 @@ def numpytest(x,y, qnt):
    # return tuple of the sum of all elements (z=x*y) and time for it in a perf_counter_ns
    
    print(f"        Numpy part. N = {qnt}")  
-   start_t = time.perf_counter_ns()
-   
-   z = np.matmul(x,y)
-   t = np.sum(z)
-   
-   end_t = time.perf_counter_ns()
-   return (t,end_t-start_t)
+   best_time = 1e+12
+   for i in range(3):
+       start_t = time.perf_counter_ns()   
+       z = np.matmul(x,y)
+       t = np.sum(z)
+       end_t = time.perf_counter_ns()
+       dt = end_t-start_t
+       if dt < best_time:
+           best_time = dt
+       del z
+   return (t,best_time)
    
 def torchcudatest(x,y,qnt,nrepeat,device):
     # Calculate with pytorch on 'cuda'
@@ -69,15 +73,21 @@ def torchcputest(x,y,qnt,nrepeat,device):
     a = torch.from_numpy(x)
     b = torch.from_numpy(y)
     
-    torch.cpu.synchronize(device = device)
-    start_t = time.perf_counter_ns()
-    c = torch.mm(a,b)
-    t = torch.sum(c)
-    torch.cpu.synchronize(device = device) 
-    end_t = time.perf_counter_ns()
+    best_time = 1e+12
+    for i in range(nrepeat):
+        torch.cpu.synchronize(device = device)
+        start_t = time.perf_counter_ns()
+        c = torch.mm(a,b)
+        t = torch.sum(c)
+        torch.cpu.synchronize(device = device) 
+        end_t = time.perf_counter_ns()
+        dt = end_t - start_t
+        if dt < best_time:
+            best_time = dt
+        del c
     
     #free memory_allocated
-    del a; del b; del c
+    del a; del b;
     return(t,end_t-start_t)
     
 def gettflops(timedelta):
