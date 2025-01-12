@@ -1,0 +1,12 @@
+To use the GPU you must install not only drivers, but PyTorch version with support you graphic card.
+See https://pytorch.org/get-started/locally/  for more information.
+
+For example, for AMD card after install ROCm drivers 6.2 you must enter the command:
+
+$ pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm6.2
+
+For Nvidia, at first you should install nvidia cuda drivers and enter:
+
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+or other pytorch, dependancy of the your OS and CUDA version
